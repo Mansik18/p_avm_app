@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+  fastapi:
+    container_name: avm_app
+    build:
+      context: .
+      dockerfile: ./.docker/app/Dockerfile
+    ports:
+      - "9000:9000"
+    expose:
+      - "8000"
+    depends_on:
+      - redis
+      - worker
+    environment:
+      - CELERY_BROKER_URL
+      - CELERY_RESULT_BACKEND
+      - WORKER_NAME
+      - PYTHONUNBUFFERED=1
+#    deploy:
+    #      resources:
+    #        reservations:
+    #          devices:
+    #            - capabilities: [ gpu ]
+    command: >
+      bash -c "jupyter notebook --ip=0.0.0.0 --port=9000 --allow-root &
+               fastapi run app/main.py --host 0.0.0.0 --port 8000
+               tail -f /dev/null"
+
+  worker:
+    container_name: avm_worker
+    build:
+      context: .
+      dockerfile: ./.docker/app/Dockerfile
+    command: celery -A app.worker.worker worker --concurrency=${CONCURRENCY} --loglevel=info -n ${WORKER_NAME}
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - capabilities: [ gpu ]
+    environment:
+      - CELERY_BROKER_URL
+      - CELERY_RESULT_BACKEND
+      - NVIDIA_VISIBLE_DEVICES
+      - NVIDIA_DRIVER_CAPABILITIES
+      - PYTHONUNBUFFERED
+      - WORKER_NAME
+      - CONCURRENCY
+
+  redis:
+    container_name: avm_redis
+    image: redis
+    ports:
+      - "6379:6379"
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./.docker/nginx/Dockerfile
+    container_name: avm_nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - fastapi

@@ -1,0 +1,7 @@
+Host tunnel.kz
+    HostName tunnel.kz
+    User player
+    IdentityFile /root/.ssh/id_rsa
+    Port 22
+    ServerAliveInterval 300
+    ServerAliveCountMax 864
