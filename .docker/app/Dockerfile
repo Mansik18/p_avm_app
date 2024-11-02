@@ -6,6 +6,7 @@ WORKDIR /app
 COPY ../.. /app
 
 RUN pip install notebook
+CMD ["jupyter", "notebook", "--NotebookApp.password='sha1:a58051cdbd5c:8ee35109f0076445b37be17d926e56bee5910bea'", "--ip=0.0.0.0", "--port=8888", "--allow-root"]
 RUN pip install "fastapi[standard]" celery Redis flower
 
 RUN apt-get update && apt-get install -y openssh-client
