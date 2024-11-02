@@ -2,3 +2,6 @@
 install.ipynb
 installer.py
 update.ipynb
+update.py
+output-jupyter.log
+output.log
